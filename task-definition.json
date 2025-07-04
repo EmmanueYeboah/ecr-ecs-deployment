@@ -1,5 +1,5 @@
 {
-  "taskDefinitionArn": "arn:aws:ecs:us-east-2:791608741362:task-definition/car-rentals-task:2",
+  "taskDefinitionArn": "arn:aws:ecs:us-east-2:791608741362:task-definition/car-rentals-task:5",
   "containerDefinitions": [
     {
       "name": "car-rentals-app",
@@ -16,10 +16,8 @@
       ],
       "essential": true,
       "environment": [],
-      "environmentFiles": [],
       "mountPoints": [],
       "volumesFrom": [],
-      "ulimits": [],
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
@@ -34,13 +32,17 @@
     }
   ],
   "family": "car-rentals-task",
+  "executionRoleArn": "arn:aws:iam::791608741362:role/ecsTaskExecutionRole",
   "networkMode": "bridge",
-  "revision": 2,
+  "revision": 5,
   "volumes": [],
   "status": "ACTIVE",
   "requiresAttributes": [
     {
       "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
+    },
+    {
+      "name": "ecs.capability.execution-role-awslogs"
     },
     {
       "name": "com.amazonaws.ecs.capability.ecr-auth"
@@ -49,7 +51,7 @@
       "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
     },
     {
-      "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+      "name": "ecs.capability.execution-role-ecr-pull"
     },
     {
       "name": "com.amazonaws.ecs.capability.docker-remote-api.1.29"
@@ -62,13 +64,12 @@
   "requiresCompatibilities": [
     "EC2"
   ],
-  "cpu": "512",
-  "memory": "1024",
+  "memory": "3",
   "runtimePlatform": {
     "cpuArchitecture": "X86_64",
     "operatingSystemFamily": "LINUX"
   },
-  "registeredAt": "2025-07-04T02:15:41.338Z",
+  "registeredAt": "2025-07-04T03:11:04.144Z",
   "registeredBy": "arn:aws:iam::791608741362:root",
   "enableFaultInjection": false,
   "tags": []
