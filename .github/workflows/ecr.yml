@@ -1,4 +1,4 @@
-name: Build and Push to AWS ECR, then deploy to ECS Fargate
+name: Build and Push to AWS ECR, then deploy to ECS EC2
 
 on:
   push:
@@ -27,7 +27,6 @@ jobs:
       uses: aws-actions/amazon-ecr-login@v2
 
     - name: Build Docker image
-      id: build-image
       run: |
         docker build -t ${{ secrets.ECR_REPOSITORY_URI }}:latest .
 
@@ -39,21 +38,19 @@ jobs:
       run: |
         docker push ${{ secrets.ECR_REPOSITORY_URI }}:latest
 
-    - name: Fill in the new image ID in the Amazon ECS task definition
-      id: task-def
+    - name: Render updated ECS Task Definition for EC2
+      id: render-task
       uses: aws-actions/amazon-ecs-render-task-definition@v1
       with:
         task-definition: ./task-definition.json
-        container-name: ${{ secrets.CONTAINER_NAME }} 
+        container-name: ${{ secrets.CONTAINER_NAME }}
         image: ${{ secrets.ECR_REPOSITORY_URI }}:latest
 
-    - name: Debug Rendered Task Definition
-      run: cat ${{ steps.task-def.outputs.task-definition }}  
-      
-    - name: Deploy Amazon ECS task definition
+    - name: Deploy to Amazon ECS EC2 Cluster
       uses: aws-actions/amazon-ecs-deploy-task-definition@v2
       with:
-        task-definition: ${{ steps.task-def.outputs.task-definition }}
+        task-definition: ${{ steps.render-task.outputs.task-definition }}
         service: ${{ secrets.ECS_SERVICE }}
         cluster: ${{ secrets.ECS_CLUSTER }}
         wait-for-service-stability: true
+        launch-type: EC2  # <-- Ensure you're not using Fargate
