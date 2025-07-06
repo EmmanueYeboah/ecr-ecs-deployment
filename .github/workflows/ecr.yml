@@ -1,21 +1,20 @@
-name: Build and Push to AWS ECR
-
+   name: Build and Push to AWS ECR, then deploy to ECS
 
 on:
   push:
     branches:
       - main
-
+    paths-ignore:
+      - 'docs/**'
+      - 'readme.md'
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
-
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
-
 
     - name: Set up AWS Credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -28,6 +27,7 @@ jobs:
       uses: aws-actions/amazon-ecr-login@v2
 
     - name: Build Docker image
+      id: build-image
       run: |
         docker build -t ${{ secrets.ECR_REPOSITORY_URI }}:latest .
 
@@ -39,6 +39,21 @@ jobs:
       run: |
         docker push ${{ secrets.ECR_REPOSITORY_URI }}:latest
 
-    - name: Update ECS service
-      run: |
-        aws ecs update-service --cluster ${{ secrets.ECS_CLUSTER }} --service ${{ secrets.ECS_SERVICE }} --force-new-deployment
+    - name: Fill in the new image ID in the Amazon ECS task definition
+      id: task-def
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: ./task-definition.json
+        container-name: ${{ secrets.CONTAINER_NAME }} 
+        image: ${{ secrets.ECR_REPOSITORY_URI }}:latest
+
+    - name: Debug Rendered Task Definition
+      run: cat ${{ steps.task-def.outputs.task-definition }}  
+      
+    - name: Deploy Amazon ECS task definition
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+      with:
+        task-definition: ${{ steps.task-def.outputs.task-definition }}
+        service: ${{ secrets.ECS_SERVICE }}
+        cluster: ${{ secrets.ECS_CLUSTER }}
+        wait-for-service-stability: true
