@@ -4,7 +4,7 @@
   "containerDefinitions": [
     {
       "name": "car-rentals-container",
-      "image": "dummy-placeholder",  // This will be replaced by GitHub Actions
+      "image": "dummy-placeholder",
       "portMappings": [
         {
           "containerPort": 80,
