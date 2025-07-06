@@ -1,20 +1,21 @@
-name: Build and Push to AWS ECR, then deploy to ECS EC2
+name: Build and Push to AWS ECR
+
 
 on:
   push:
     branches:
       - main
-    paths-ignore:
-      - 'docs/**'
-      - 'readme.md'
+
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
+
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
+
 
     - name: Set up AWS Credentials
       uses: aws-actions/configure-aws-credentials@v4
@@ -38,19 +39,6 @@ jobs:
       run: |
         docker push ${{ secrets.ECR_REPOSITORY_URI }}:latest
 
-    - name: Render updated ECS Task Definition for EC2
-      id: render-task
-      uses: aws-actions/amazon-ecs-render-task-definition@v1
-      with:
-        task-definition: ./task-definition.json
-        container-name: ${{ secrets.CONTAINER_NAME }}
-        image: ${{ secrets.ECR_REPOSITORY_URI }}:latest
-
-    - name: Deploy to Amazon ECS EC2 Cluster
-      uses: aws-actions/amazon-ecs-deploy-task-definition@v2
-      with:
-        task-definition: ${{ steps.render-task.outputs.task-definition }}
-        service: ${{ secrets.ECS_SERVICE }}
-        cluster: ${{ secrets.ECS_CLUSTER }}
-        wait-for-service-stability: true
-        launch-type: EC2  # <-- Ensure you're not using Fargate
+    - name: Update ECS service
+      run: |
+        aws ecs update-service --cluster ${{ secrets.ECS_CLUSTER }} --service ${{ secrets.ECS_SERVICE }} --force-new-deployment
